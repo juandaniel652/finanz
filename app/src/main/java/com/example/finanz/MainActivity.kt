@@ -3,7 +3,6 @@ package com.example.finanz
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,6 +13,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
@@ -31,12 +32,18 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.finanz.model.Movement
+import com.example.finanz.model.MovementType
 
 private val FinanzGreen = Color(0xFF059669)
 
@@ -54,13 +61,56 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun FinanzApp() {
 
+    var movements by remember {
+        mutableStateOf(
+            listOf(
+                Movement(
+                    id = 1L,
+                    type = MovementType.INCOME,
+                    amount = 8000000L,
+                    category = "Trabajo",
+                    date = System.currentTimeMillis(),
+                    description = "Pago recibido"
+                ),
+                Movement(
+                    id = 2L,
+                    type = MovementType.EXPENSE,
+                    amount = 1500000L,
+                    category = "Comida",
+                    date = System.currentTimeMillis(),
+                    description = "Supermercado"
+                ),
+                Movement(
+                    id = 3L,
+                    type = MovementType.EXPENSE,
+                    amount = 500000L,
+                    category = "Transporte",
+                    date = System.currentTimeMillis(),
+                    description = "Transporte"
+                )
+            )
+        )
+    }
+
+    val income = movements
+        .filter { it.type == MovementType.INCOME }
+        .sumOf { it.amount }
+
+    val expenses = movements
+        .filter { it.type == MovementType.EXPENSE }
+        .sumOf { it.amount }
+
+    val balance = income - expenses
+
+    val savings = balance
+
     MaterialTheme {
 
         Scaffold(
             floatingActionButton = {
                 FloatingActionButton(
                     onClick = {
-                        // Etapa 5: abrirá el formulario
+                        // Etapa 5: abrir formulario
                     },
                     containerColor = FinanzGreen,
                     contentColor = Color.White
@@ -77,7 +127,12 @@ fun FinanzApp() {
         ) { innerPadding ->
 
             HomeScreen(
-                modifier = Modifier.padding(innerPadding)
+                modifier = Modifier.padding(innerPadding),
+                balance = balance,
+                income = income,
+                expenses = expenses,
+                savings = savings,
+                movements = movements
             )
         }
     }
@@ -92,9 +147,7 @@ fun FinanzNavigationBar() {
 
         NavigationBarItem(
             selected = true,
-            onClick = {
-                // Etapa futura: navegación
-            },
+            onClick = {},
             icon = {
                 Icon(
                     imageVector = Icons.Default.AccountBalanceWallet,
@@ -108,9 +161,7 @@ fun FinanzNavigationBar() {
 
         NavigationBarItem(
             selected = false,
-            onClick = {
-                // Etapa futura: pantalla de movimientos
-            },
+            onClick = {},
             icon = {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.List,
@@ -124,9 +175,7 @@ fun FinanzNavigationBar() {
 
         NavigationBarItem(
             selected = false,
-            onClick = {
-                // Etapa futura: pantalla de categorías
-            },
+            onClick = {},
             icon = {
                 Icon(
                     imageVector = Icons.Default.Category,
@@ -142,7 +191,12 @@ fun FinanzNavigationBar() {
 
 @Composable
 fun HomeScreen(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    balance: Long,
+    income: Long,
+    expenses: Long,
+    savings: Long,
+    movements: List<Movement>
 ) {
 
     Surface(
@@ -165,11 +219,17 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            BalanceCard()
+            BalanceCard(
+                balance = balance
+            )
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            SummarySection()
+            SummarySection(
+                income = income,
+                expenses = expenses,
+                savings = savings
+            )
 
             Spacer(modifier = Modifier.height(28.dp))
 
@@ -181,13 +241,36 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            EmptyMovements()
+            if (movements.isEmpty()) {
+
+                EmptyMovements()
+
+            } else {
+
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+
+                    items(
+                        items = movements,
+                        key = { it.id }
+                    ) { movement ->
+
+                        MovementItem(
+                            movement = movement
+                        )
+                    }
+                }
+            }
         }
     }
 }
 
 @Composable
-fun BalanceCard() {
+fun BalanceCard(
+    balance: Long
+) {
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -210,7 +293,7 @@ fun BalanceCard() {
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "$0,00",
+                text = formatMoney(balance),
                 color = Color.White,
                 fontSize = 34.sp,
                 fontWeight = FontWeight.Bold
@@ -220,7 +303,11 @@ fun BalanceCard() {
 }
 
 @Composable
-fun SummarySection() {
+fun SummarySection(
+    income: Long,
+    expenses: Long,
+    savings: Long
+) {
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -230,21 +317,21 @@ fun SummarySection() {
         SummaryItem(
             modifier = Modifier.weight(1f),
             title = "Ingresos",
-            value = "$0,00",
+            value = formatMoney(income),
             valueColor = FinanzGreen
         )
 
         SummaryItem(
             modifier = Modifier.weight(1f),
             title = "Gastos",
-            value = "$0,00",
+            value = formatMoney(expenses),
             valueColor = MaterialTheme.colorScheme.error
         )
 
         SummaryItem(
             modifier = Modifier.weight(1f),
             title = "Ahorro",
-            value = "$0,00",
+            value = formatMoney(savings),
             valueColor = MaterialTheme.colorScheme.onSurface
         )
     }
@@ -287,6 +374,75 @@ fun SummaryItem(
 }
 
 @Composable
+fun MovementItem(
+    movement: Movement
+) {
+
+    val isIncome = movement.type == MovementType.INCOME
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+            Icon(
+                imageVector = if (isIncome) {
+                    Icons.Default.Add
+                } else {
+                    Icons.AutoMirrored.Filled.List
+                },
+                contentDescription = null,
+                tint = if (isIncome) {
+                    FinanzGreen
+                } else {
+                    MaterialTheme.colorScheme.error
+                },
+                modifier = Modifier.size(28.dp)
+            )
+
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 12.dp)
+            ) {
+
+                Text(
+                    text = movement.category,
+                    fontWeight = FontWeight.SemiBold
+                )
+
+                Text(
+                    text = movement.description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Text(
+                text = if (isIncome) {
+                    "+${formatMoney(movement.amount)}"
+                } else {
+                    "-${formatMoney(movement.amount)}"
+                },
+                color = if (isIncome) {
+                    FinanzGreen
+                } else {
+                    MaterialTheme.colorScheme.error
+                },
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
+@Composable
 fun EmptyMovements() {
 
     Column(
@@ -318,5 +474,28 @@ fun EmptyMovements() {
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+    }
+}
+
+fun formatMoney(amountInCents: Long): String {
+
+    val absoluteAmount = kotlin.math.abs(amountInCents)
+
+    val pesos = absoluteAmount / 100
+    val cents = absoluteAmount % 100
+
+    val formattedPesos = pesos
+        .toString()
+        .reversed()
+        .chunked(3)
+        .joinToString(".")
+        .reversed()
+
+    val result = "$$formattedPesos,${cents.toString().padStart(2, '0')}"
+
+    return if (amountInCents < 0) {
+        "-$result"
+    } else {
+        result
     }
 }
