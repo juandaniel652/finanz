@@ -1,0 +1,9 @@
+build.gradle.kts.backup
+.vscode
+.kotlin
+.gradle
+build.gradle.kts
+gradle.properties
+gradlew.bat
+app/build.gradle.kts
+app/.gradle

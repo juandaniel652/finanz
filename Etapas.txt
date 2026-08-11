@@ -1,0 +1,10 @@
+Etapa 1 → Estructura Minima
+Etapa 2 → Modelo Movement
+Etapa 3 → HomeScreen
+Etapa 4 → Estado
+Etapa 5 → Formulario
+Etapa 6 → ViewModel
+Etapa 7 → Room
+Etapa 8 → Categorías
+Etapa 9 → filtros
+Etapa 10 → APK final
