@@ -1,0 +1,20 @@
+app/
+└── src/
+    └── main/
+        └── java/
+            └── com.example.finanz/
+                │
+                ├── MainActivity.kt
+                │
+                ├── model/
+                │   ├── Movement.kt
+                │   ├── MovementType.kt
+                │   └── Category.kt
+                │
+                ├── ui/
+                │   ├── HomeScreen.kt
+                │   ├── AddMovementScreen.kt
+                │   └── components/
+                │
+                └── viewmodel/
+                    └── FinanceViewModel.kt
